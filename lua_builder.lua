@@ -17,18 +17,20 @@ local LuaBuilder = {}
 --- Creates a new LuaBuilder instance.
 --- @return LuaBuilder builder The new LuaBuilder instance.
 function LuaBuilder.new()
-    local self = {
-        buf = {},
-        indent_level = 0,
-        indent_str = "    ",
-        newline = "\n"
-    }
-    return setmetatable(self, {
-        __index = LuaBuilder,
-        __tostring = LuaBuilder.build,
-        __call = LuaBuilder.append,
-        __concat = LuaBuilder.append
-    })
+    return setmetatable(
+        {
+            buf = {},
+            indent_level = 0,
+            indent_str = "    ",
+            newline = "\n"
+        },
+        {
+            __index = LuaBuilder,
+            __tostring = LuaBuilder.build,
+            __call = LuaBuilder.append,
+            __concat = LuaBuilder.append
+        }
+    )
 end
 
 function LuaBuilder:build()
