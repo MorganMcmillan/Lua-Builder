@@ -18,8 +18,8 @@ local LuaBuilder = require("lua_builder")
 local builder = LuaBuilder.new()
 
 -- Generates a function that solves FizzBuzz
--- An empty string is passed to `Return` to force it to add a space
-builder:Return(""):Function(nil, "i")
+-- return is added as a string to prevent a newline from being added
+builder"return ":Function(nil, "i")
 for i = 1, 100 do
     builder:If()"i ":eq(i):Then()
     if i % 15 == 0 then
