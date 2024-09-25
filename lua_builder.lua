@@ -28,7 +28,8 @@ function LuaBuilder.new()
     return setmetatable(self, {
         __index = LuaBuilder,
         __tostring = LuaBuilder.build,
-        __call = LuaBuilder.insert_verbatim
+        __call = LuaBuilder.append,
+        __concat = LuaBuilder.append
     })
 end
 
@@ -110,7 +111,7 @@ function LuaBuilder:set_crlf()
     return self
 end
 
-LuaBuilder.append = LuaBuilder.insert_verbatim
+LuaBuilder.insert_verbatim = LuaBuilder.append
 
 --- Appends a space to the generated lua source code.
 ---@return Self
@@ -196,15 +197,16 @@ end
 
 LuaBuilder.nln = LuaBuilder.nlnoindent
 
---- Inserts the text verbatim into the generated lua source code.
+--- Appends text to the generated lua source code.
 --- This can also be invoked by calling the instance of `LuaBuilder` with a string.
 ---@param text string The text to insert.
 ---@return Self
-function LuaBuilder:insert_verbatim(text)
+function LuaBuilder:append(text)
     self.buf[#self.buf + 1] = text
     return self
 end
 
+--- Generates a single-line comment.
 --- The user is responsible for adding any space between the `--` and the comment itself.
 ---@param comment string The comment to add.
 ---@param is_doc? boolean Whether the comment should use the `---` documentation comment prefix.
@@ -921,6 +923,7 @@ end
 ---@return Self
 function LuaBuilder:get_top(name)
     self.buf[#self.buf + 1] = name .. "[#" .. name .. "]"
+    return self
 end
 
 --- Convience function for requiring a module.
