@@ -275,7 +275,6 @@ function LuaBuilder:assign(name, value)
     return self
 end
 
-
 --- Generates a local variable(s) declaration and assignment(s).
 ---@param name string|string[] The name(s) of the variable(s).
 ---@param value? string|string[] The value(s) to assign, if any.
@@ -923,8 +922,6 @@ end
 function LuaBuilder:get_top(name)
     self.buf[#self.buf + 1] = name .. "[#" .. name .. "]"
 end
-
-
 
 --- Convience function for requiring a module.
 ---@param module string The name of the module to require.
