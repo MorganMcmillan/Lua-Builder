@@ -280,6 +280,29 @@ function LuaBuilder:local_assign(name, value)
     return self
 end
 
+--- Convience function for localizing global variables.
+---@param names string[] The names of the variables.
+---@param table? string The name of the table where the variable are localized from, if any.
+---@return Self
+function LuaBuilder:localize(names, table)
+    if table then
+        self.buf[#self.buf + 1] = "local " .. table .. " = " .. table
+        self:nl()
+        end
+    self.buf[#self.buf + 1] = "local " .. concat(names, ", ") .. " = "
+    if table then
+        local values = {}
+        for i = 1, #names do
+            values[i] = table .. "." .. names[i]
+        end
+        self.buf[#self.buf + 1] = concat(values, ", ")
+    else
+        self.buf[#self.buf + 1] = concat(names, ", ")
+    end
+    self:nl()
+    return self
+end
+
 --- Generates the `=` operator, followed by an optional value.
 ---@param value? string The value to assign, if any.
 ---@return Self
@@ -485,6 +508,22 @@ end
 ---@return Self
 function LuaBuilder:vararg()
     self.buf[#self.buf + 1] = "..."
+    return self
+end
+
+LuaBuilder.va = LuaBuilder.vararg
+
+--- Convience function for selecting a value from a vararg.
+---@param index number The index of the value to select.
+---@return Self
+function LuaBuilder:select(index)
+    self.buf[#self.buf + 1] = "select(" .. index .. ", ...)"
+    return self
+end
+
+--- Convience function for getting the length of a vararg.
+function LuaBuilder:va_len()
+    self.buf[#self.buf + 1] = "select('#', ...)"
     return self
 end
 
@@ -875,6 +914,17 @@ end
 ---@return Self
 function LuaBuilder:get_top(name)
     self.buf[#self.buf + 1] = name .. "[#" .. name .. "]"
+end
+
+
+
+--- Convience function for requiring a module.
+---@param module string The name of the module to require.
+---@param path? string The path to the module. Default to the module name.
+---@return Self
+function LuaBuilder:require(module, path)
+    self.buf[#self.buf + 1] = "require" .. "(\"" .. (path or module) .. "\")"
+    return self
 end
 
 return LuaBuilder
