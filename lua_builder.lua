@@ -187,6 +187,14 @@ function LuaBuilder:nlde()
     return self
 end
 
+--- Appends a newline to the generated lua source code, without indentation. Useful for blank lines.
+---@return Self
+function LuaBuilder:nlnoindent()
+    self.buf[#self.buf + 1] = self.newline
+    return self
+end
+
+LuaBuilder.nln = LuaBuilder.nlnoindent
 
 --- Inserts the text verbatim into the generated lua source code.
 --- This can also be invoked by calling the instance of `LuaBuilder` with a string.
