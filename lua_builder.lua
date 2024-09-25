@@ -749,6 +749,7 @@ end
 ---@return Self
 function LuaBuilder:ternary(condition, true_value, false_value)
     self.buf[#self.buf + 1] = condition .. " and " .. true_value .. " or " .. false_value
+    return self
 end
 
 --- Generates the `#` operator, followed by an optional value.
