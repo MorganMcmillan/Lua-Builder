@@ -114,8 +114,6 @@ function LuaBuilder:set_crlf()
     return self
 end
 
-LuaBuilder.insert_verbatim = LuaBuilder.append
-
 --- Appends a space to the generated lua source code.
 ---@return self
 function LuaBuilder:sp()
@@ -191,8 +189,8 @@ function LuaBuilder:nlde()
     return self
 end
 
---- Reduces the indentation of the current line
---- Does not check if the current line is blank
+--- Reduces the indentation of the current line.
+--- Does not check if the current line is blank.
 function LuaBuilder:decurrent()
     self.indent_level = self.indent_level - 1
     self.buf[#self.buf] = self.newline .. self:get_indent()
@@ -216,6 +214,8 @@ function LuaBuilder:append(text)
     self.buf[#self.buf + 1] = text
     return self
 end
+
+LuaBuilder.insert_verbatim = LuaBuilder.append
 
 --- Generates a single-line comment.
 --- The user is responsible for adding any space between the `--` and the comment itself.
@@ -263,8 +263,7 @@ end
 ---@return self
 function LuaBuilder:local_var(name)
     self.buf[#self.buf + 1] = "local " .. name
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates a local variable declaration for multiple variables.
@@ -272,8 +271,7 @@ end
 ---@return self
 function LuaBuilder:local_vars(names)
     self.buf[#self.buf + 1] = "local " .. concat(names, ", ")
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates a variable(s) assignment(s).
@@ -284,8 +282,7 @@ function LuaBuilder:assign(name, value)
     if type(name) == "table" then name = concat(name, ", ") end
     if type(value) == "table" then value = concat(value, ", ") end
     self.buf[#self.buf + 1] = "local " .. name .. " = " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates a local variable(s) declaration and assignment(s).
@@ -296,11 +293,11 @@ function LuaBuilder:local_assign(name, value)
     if type(name) == "table" then name = concat(name, ", ") end
     if type(value) == "table" then value = concat(value, ", ") end
     self.buf[#self.buf + 1] = "local " .. name .. " = " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
---- Convience function for localizing global variables.
+--- Convience function for putting all fields of a table into local scope.
+--- Useful for localizing functions from a library.
 ---@param names string[] The names of the variables.
 ---@param table? string The name of the table where the variable are localized from, if any.
 ---@return self
@@ -319,8 +316,7 @@ function LuaBuilder:localize(names, table)
     else
         self.buf[#self.buf + 1] = concat(names, ", ")
     end
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates the `=` operator, followed by an optional value.
@@ -379,8 +375,7 @@ end
 ---@return self
 function LuaBuilder:Then()
     self.buf[#self.buf + 1] = "then"
-    self:nlin()
-    return self
+    return self:nlin()
 end
 
 --- Generates an `if` statement, followed by a condition, and finally followed by the `then` keyword.
@@ -388,8 +383,7 @@ end
 ---@return self
 function LuaBuilder:IfThen(condition)
     self.buf[#self.buf + 1] = "if " .. condition .. " then"
-    self:nlin()
-    return self
+    return self:nlin()
 end
 
 --- Generates the `elseif` keyword.
@@ -406,8 +400,7 @@ end
 function LuaBuilder:ElseIfThen(condition)
     self:decurrent()
     self.buf[#self.buf + 1] = "elseif " .. condition .. " then"
-    self:nlin()
-    return self
+    return self:nlin()
 end
 
 --- Generates the `else` keyword.
@@ -415,8 +408,7 @@ end
 function LuaBuilder:Else()
     self:decurrent()
     self.buf[#self.buf + 1] = "else"
-    self:nlin()
-    return self
+    return self:nlin()
 end
 
 --- Generates the `end` keyword.
@@ -424,8 +416,7 @@ end
 function LuaBuilder:End()
     self:decurrent()
     self.buf[#self.buf + 1] = "end"
-    self:nl()
-    return self
+    return self:nl()
 end
 
 LuaBuilder.EndIf = LuaBuilder.End
@@ -441,8 +432,7 @@ end
 ---@return self
 function LuaBuilder:Do()
     self.buf[#self.buf + 1] = "do"
-    self:nlin()
-    return self
+    return self:nlin()
 end
 
 LuaBuilder.EndWhile = LuaBuilder.End
@@ -495,8 +485,7 @@ end
 ---@return self
 function LuaBuilder:for_numeric_do(var, start, finish, step)
     self.buf[#self.buf + 1] = "for " .. var .. " = " .. start .. ", " .. finish .. (step and (", " .. step) or "") .. " do"
-    self:nlin()
-    return self
+    return self:nlin()
 end
 
 --- Generates a for loop with an iterator.
@@ -506,8 +495,7 @@ end
 function LuaBuilder:for_in_do(vars, iterator)
     if type(vars) == "table" then vars = concat(vars, ", ") end
     self.buf[#self.buf + 1] = "for " .. vars .. " in " .. iterator .. " do"
-    self:nlin()
-    return self
+    return self:nlin()
 end
 
 LuaBuilder.EndFor = LuaBuilder.End
@@ -521,9 +509,10 @@ function LuaBuilder:Function(name, args)
     elseif type(args) == "table" then args = concat(args, ", ")
     end
     self.buf[#self.buf + 1] = "function" .. (name and (" " .. name) or "") .. "(" .. args .. ")"
-    self:nlin()
-    return self
+    return self:nlin()
 end
+
+LuaBuilder.fn = LuaBuilder.Function
 
 --- Generates the `...` variable.
 ---@return self
@@ -543,10 +532,12 @@ function LuaBuilder:select(index)
 end
 
 --- Convience function for getting the length of a vararg.
-function LuaBuilder:va_len()
+function LuaBuilder:select_len()
     self.buf[#self.buf + 1] = "select('#', ...)"
     return self
 end
+
+LuaBuilder.va_len = LuaBuilder.select_len
 
 --- Generates a return statement, optionally followed by a list of values.
 --- Note that `Return` on its own does not add a space after the `return` keyword.
@@ -559,8 +550,7 @@ function LuaBuilder:Return(values)
     else values = " " .. values
     end
     self.buf[#self.buf + 1] = "return" .. values
-    self:nl()
-    return self
+    return self:nl()
 end
 
 LuaBuilder.EndFunction = LuaBuilder.End
@@ -585,8 +575,7 @@ function LuaBuilder:call_function(name, args)
     elseif type(args) == "table" then args = concat(args, ", ")
     end
     self.buf[#self.buf + 1] = name .. "(" .. args .. ")"
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates a call to a function with a string argument.
@@ -597,11 +586,24 @@ end
 ---@return self
 function LuaBuilder:call_function_string(name, string)
     self.buf[#self.buf + 1] = name .. format("%q", string):gsub("\\\n", "\\n")
-    self:nl()
-    return self
+    return self:nl()
 end
 
 LuaBuilder.call_string = LuaBuilder.call_function_string
+
+--- Generates a call to a function with a table argument.
+---@param name string The name of the function to call.
+---@param args? string|string[] The arguments to pass to the function, if nil the function has no arguments.
+---@return self
+function LuaBuilder:call_function_table(name, args)
+    if args == nil then args = ""
+    elseif type(args) == "table" then args = concat(args, ", ")
+    end
+    self.buf[#self.buf + 1] = name .. "{" .. args .. "}"
+    return self:nl()
+end
+
+LuaBuilder.call_table = LuaBuilder.call_function_table
 
 --- Generates a call to a method.
 ---@param name string The name of the method to call.
@@ -612,8 +614,7 @@ function LuaBuilder:CallMethod(name, args)
     elseif type(args) == "table" then args = concat(args, ", ")
     end
     self.buf[#self.buf + 1] = ":" .. name .. "(" .. args .. ")"
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates a `.`.
@@ -639,8 +640,7 @@ function LuaBuilder:table_start()
         self:nl()
     end 
     self.buf[#self.buf + 1] = "{"
-    self:nlin()
-    return self
+    return self:nlin()
 end
 
 --- Generates the end of a multi-line table literal `}`.
@@ -776,7 +776,7 @@ end
 ---@param value? string The value to get the length of, if any.
 ---@return self
 function LuaBuilder:len(value)
-    self.buf[#self.buf + 1] = "#" .. (value and (value .. " ") or "")
+    self.buf[#self.buf + 1] = "#" .. (value or "")
     return self
 end
 
@@ -812,8 +812,7 @@ end
 ---@return self
 function LuaBuilder:add_assign(name, value)
     self.buf[#self.buf + 1] = name .. " = " .. name .. " + " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates the `-` operator, followed by a value.
@@ -831,8 +830,7 @@ end
 ---@return self
 function LuaBuilder:sub_assign(name, value)
     self.buf[#self.buf + 1] = name .. " = " .. name .. " - " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates the `*` operator, followed by a value.
@@ -850,8 +848,7 @@ end
 ---@return self
 function LuaBuilder:mult_assign(name, value)
     self.buf[#self.buf + 1] = name .. " = " .. name .. " * " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates the `/` operator, followed by a value.
@@ -869,8 +866,7 @@ end
 ---@return self
 function LuaBuilder:div_assign(name, value)
     self.buf[#self.buf + 1] = name .. " = " .. name .. " / " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates the `%` operator, followed by a value.
@@ -888,8 +884,7 @@ end
 ---@return self
 function LuaBuilder:mod_assign(name, value)
     self.buf[#self.buf + 1] = name .. " = " .. name .. " % " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates the `^` operator, followed by a value.
@@ -907,8 +902,7 @@ end
 ---@return self
 function LuaBuilder:pow_assign(name, value)
     self.buf[#self.buf + 1] = name .. " = " .. name .. " ^ " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Generates the `..` operator, followed by a value.
@@ -926,8 +920,7 @@ end
 ---@return self
 function LuaBuilder:concat_assign(name, value)
     self.buf[#self.buf + 1] = name .. " = " .. name .. " .. " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Convience function for pushing a value onto a table.
@@ -936,8 +929,7 @@ end
 ---@return self
 function LuaBuilder:push(name, value)
     self.buf[#self.buf + 1] = name .. "[#" .. name .. " + 1] = " .. value
-    self:nl()
-    return self
+    return self:nl()
 end
 
 --- Convience function for getting the top value of a table.
@@ -954,8 +946,7 @@ end
 ---@return self
 function LuaBuilder:require(module, path)
     self.buf[#self.buf + 1] = "require" .. "(\"" .. (path or module) .. "\")"
-    self:nl()
-    return self
+    return self:nl()
 end
 
 return LuaBuilder
